@@ -6,13 +6,11 @@ from GenFolders import SplitPicsToOtherFolders
 
 IMAGE_FOLDER = './images/'
 MUSIC_FOLDER = './music/'
+OUTPUT_FOLDER = './output/'
 
 # Preprocess
 SplitPicsToOtherFolders(IMAGE_FOLDER)
 RenameMusics(MUSIC_FOLDER)
-
-random_number = random.randint(0,len(os.listdir('./music/')) - 1)
-input_audio_path = os.path.join(MUSIC_FOLDER, os.listdir(MUSIC_FOLDER)[random_number])
 
 
 def get_last_folder_name(path):
@@ -22,6 +20,8 @@ def get_last_folder_name(path):
 
 def GenerateVideo(image_path):
     try:
+        random_number = random.randint(0, len(os.listdir('./music/')) - 1)
+        input_audio_path = os.path.join(MUSIC_FOLDER, os.listdir(MUSIC_FOLDER)[random_number])
         input_video_path = './output.mp4'
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         images = [img for img in os.listdir(image_path) if img.endswith('.png')]
@@ -42,15 +42,18 @@ def GenerateVideo(image_path):
             for i in range(frame_duration):
                 out.write(frame)
 
-        # Release the video writer and destroy all windows
+        total_time = len(images) * frame_duration
+
         out.release()
-        output_file = get_last_folder_name(image_path) + '.mp4'
-        command = "ffmpeg -i {} -i {} -c:v copy -c:a aac -strict experimental -map 0:v:0 -map 1:a:0 -t 70 {}".format(input_video_path, input_audio_path, output_file)
+        output_file = os.path.join(OUTPUT_FOLDER, get_last_folder_name(image_path) + '.mp4')
+        command = "ffmpeg -i {} -i {} -c:v copy -c:a aac -strict experimental -map 0:v:0 -map 1:a:0 -t {} {}".format(
+            input_video_path, input_audio_path, total_time, output_file)
         os.system(command)
         os.remove('./output.mp4')
         cv2.destroyAllWindows()
     except Exception as e:
         print(image_path, e)
+
 
 def GenAllVideos(IMAGE_FOLDER):
     folders = os.listdir(IMAGE_FOLDER)
